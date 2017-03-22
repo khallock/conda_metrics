@@ -1,26 +1,39 @@
 #!/usr/bin/env python
 import argparse
-from binstar_client.utils import get_server_api, spec
+from binstar_client.utils import get_server_api
 import binstar_client.errors
 
+import os
 import sqlite3
 import sys
 
+# detect script dir
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+os.chdir(dname)
+
+# determine db_file
+parser = argparse.ArgumentParser(description='Generate conda metrics.')
+parser.add_argument('-d', '--database-file', dest='db_file',
+                    help='conda_metrics database file',
+                    default=os.path.join(dname, 'conda_metrics.db'))
+parser.add_argument('packages', nargs='*', help='Optional package list')
+args = parser.parse_args()
+
 # set up sqlite
-conn = sqlite3.connect('conda_metrics.db')
+conn = sqlite3.connect(args.db_file)
 c = conn.cursor()
 
-args = argparse.Namespace()
-args.token = None
-args.site = None
-args.log_level = 0
+token = None
+site = None
+log_level = 0
 
 packages = ['ncl', 'pynio', 'pyngl', 'wrf-python']
 conda_channels = ['conda-forge', 'ncar', 'dbrown', 'khallock', 'bladwig']
 
 
-if len(sys.argv) > 1:
-    packages = sys.argv[1:]
+if args.packages:
+    packages = args.packages
 
 for package in packages:
     package_total_dls = 0
@@ -28,7 +41,7 @@ for package in packages:
         #db_table = "%s_%s" % (package, conda_channel)
         db_table = package.replace('-', '')
 
-        aserver_api = get_server_api(args.token, args.site, args.log_level)
+        aserver_api = get_server_api(token, site, log_level)
         try: package_obj = aserver_api.package(conda_channel, package)
         except binstar_client.errors.NotFound: continue
         try:
