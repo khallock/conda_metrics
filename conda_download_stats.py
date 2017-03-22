@@ -24,13 +24,8 @@ args = parser.parse_args()
 conn = sqlite3.connect(args.db_file)
 c = conn.cursor()
 
-token = None
-site = None
-log_level = 0
-
 packages = ['ncl', 'pynio', 'pyngl', 'wrf-python']
 conda_channels = ['conda-forge', 'ncar', 'dbrown', 'khallock', 'bladwig']
-
 
 if args.packages:
     packages = args.packages
@@ -41,7 +36,7 @@ for package in packages:
         #db_table = "%s_%s" % (package, conda_channel)
         db_table = package.replace('-', '')
 
-        aserver_api = get_server_api(token, site, log_level)
+        aserver_api = get_server_api(log_level=0)
         try: package_obj = aserver_api.package(conda_channel, package)
         except binstar_client.errors.NotFound: continue
         try:
